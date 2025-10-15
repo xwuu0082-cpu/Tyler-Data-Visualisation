@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tyler, The Creator — Music Evolution Data Visualisation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <style>
+    :root { --card-bg:#ffffff; --page-bg:#f7f7f9; --ink:#1d1d1f; --muted:#5f6368; }
+    *{box-sizing:border-box}
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+      margin: 24px;
+      background: var(--page-bg);
+      color: var(--ink);
+      line-height: 1.55;
+    }
+    header{max-width:960px;margin:0 auto 24px auto;text-align:center}
+    header h1{margin:0 0 6px 0;font-weight:700;font-size:28px}
+    header p{margin:0;color:var(--muted)}
+    .grid{max-width:1080px;margin:0 auto;display:grid;gap:28px}
+    .chart{
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+    }
+    footer{max-width:960px;margin:24px auto 0 auto;color:var(--muted);font-size:14px}
+    code{background:#f1f3f4;padding:2px 6px;border-radius:6px}
+    @media (min-width: 900px){
+      .grid{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎧 The Evolution of Tyler, The Creator</h1>
+    <p>Analysing musical style (audio features), lyric themes, and global audience distribution.</p>
+  </header>
+
+  <main class="grid">
+    <section class="chart">
+      <h2 style="margin:6px 0 12px 0;">Musical Style Evolution (2017–2021)</h2>
+      <div id="chart1"></div>
+    </section>
+
+    <section class="chart">
+      <h2 style="margin:6px 0 12px 0;">Lyric Themes Across Albums</h2>
+      <div id="chart2"></div>
+    </section>
+
+    <section class="chart">
+      <h2 style="margin:6px 0 12px 0;">Global Audience Distribution</h2>
+      <div id="chart3"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Data: simulated samples shaped like Spotify/Genius/Last.fm outputs for coursework prototyping. Author: You. Year: 2025.</p>
+  </footer>
+
+  <script>
+    // 1) Style evolution line chart
+    const spec1 = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "data": {"url": "tyler_audio_features.json"},
+      "transform": [
+        {"aggregate": [
+          {"op":"mean","field":"danceability","as":"Danceability"},
+          {"op":"mean","field":"energy","as":"Energy"},
+          {"op":"mean","field":"valence","as":"Valence"}
+        ], "groupby": ["album","year"]},
+        {"fold": ["Danceability","Energy","Valence"], "as": ["Metric","Value"]}
+      ],
+      "mark": {"type":"line","point": true},
+      "encoding": {
+        "x": {"field": "year", "type": "temporal", "title": "Release Year"},
+        "y": {"field": "Value", "type": "quantitative", "title": "Average Feature"},
+        "color": {"field": "Metric", "type": "nominal"},
+        "tooltip": [{"field":"album"},{"field":"year"},{"field":"Metric"},{"field":"Value"}]
+      }
+    };
+
+    // 2) Lyrics bar chart
+    const spec2 = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "data": {"url": "tyler_lyrics.json"},
+      "mark": "bar",
+      "encoding": {
+        "x": {"field": "word", "type": "nominal", "title": "Keyword", "sort":"-y"},
+        "y": {"field": "count", "type": "quantitative", "title": "Frequency"},
+        "color": {"field": "album", "type": "nominal", "title": "Album"},
+        "tooltip": [{"field":"album"},{"field":"word"},{"field":"count"}]
+      }
+    };
+
+    // 3) Audience map
+    const spec3 = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "height": 450,
+      "width": 960,
+      "layer": [
+        {
+          "data": {
+            "url": "https://vega.github.io/vega-datasets/data/world-110m.json",
+            "format": {"type": "topojson", "feature": "countries"}
+          },
+          "mark": {"type":"geoshape","fill":"#eeeeee","stroke":"#999"},
+          "projection": {"type":"equalEarth"}
+        },
+        {
+          "data": {"url": "tyler_audience_map.json"},
+          "mark": {"type":"circle","opacity":0.85,"stroke":"#333"},
+          "encoding": {
+            "longitude": {"field":"lon","type":"quantitative"},
+            "latitude": {"field":"lat","type":"quantitative"},
+            "size": {"field":"listeners","type":"quantitative","title":"Listeners"},
+            "color": {"field":"plays","type":"quantitative","title":"Plays"},
+            "tooltip": [{"field":"country"},{"field":"listeners"},{"field":"plays"}]
+          }
+        }
+      ]
+    };
+
+    vegaEmbed("#chart1", spec1, {actions:false});
+    vegaEmbed("#chart2", spec2, {actions:false});
+    vegaEmbed("#chart3", spec3, {actions:false});
+  </script>
+</body>
+</html>

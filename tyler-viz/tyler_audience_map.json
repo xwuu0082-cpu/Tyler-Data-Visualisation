@@ -1,0 +1,30 @@
+[
+  {
+    "country": "United States",
+    "listeners": 1200000,
+    "plays": 54000000,
+    "lat": 37.09,
+    "lon": -95.71
+  },
+  {
+    "country": "Australia",
+    "listeners": 200000,
+    "plays": 8000000,
+    "lat": -25.27,
+    "lon": 133.77
+  },
+  {
+    "country": "United Kingdom",
+    "listeners": 300000,
+    "plays": 12000000,
+    "lat": 55.38,
+    "lon": -3.43
+  },
+  {
+    "country": "Malaysia",
+    "listeners": 35000,
+    "plays": 1200000,
+    "lat": 4.21,
+    "lon": 101.98
+  }
+]

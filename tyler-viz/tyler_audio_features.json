@@ -1,0 +1,56 @@
+[
+  {
+    "album": "Flower Boy",
+    "year": 2017,
+    "track": "See You Again",
+    "danceability": 0.72,
+    "energy": 0.65,
+    "valence": 0.78,
+    "tempo": 120.5
+  },
+  {
+    "album": "Flower Boy",
+    "year": 2017,
+    "track": "911 / Mr. Lonely",
+    "danceability": 0.68,
+    "energy": 0.62,
+    "valence": 0.74,
+    "tempo": 114.0
+  },
+  {
+    "album": "IGOR",
+    "year": 2019,
+    "track": "EARFQUAKE",
+    "danceability": 0.82,
+    "energy": 0.7,
+    "valence": 0.9,
+    "tempo": 104.5
+  },
+  {
+    "album": "IGOR",
+    "year": 2019,
+    "track": "I THINK",
+    "danceability": 0.77,
+    "energy": 0.73,
+    "valence": 0.84,
+    "tempo": 108.2
+  },
+  {
+    "album": "Call Me If You Get Lost",
+    "year": 2021,
+    "track": "WUSYANAME",
+    "danceability": 0.75,
+    "energy": 0.8,
+    "valence": 0.87,
+    "tempo": 102.0
+  },
+  {
+    "album": "Call Me If You Get Lost",
+    "year": 2021,
+    "track": "CORSO",
+    "danceability": 0.67,
+    "energy": 0.89,
+    "valence": 0.76,
+    "tempo": 126.8
+  }
+]
