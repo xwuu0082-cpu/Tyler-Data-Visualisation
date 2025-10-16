@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Tyler, The Creator in Australia — HD Visualisation</title>
+  <title>Tyler, The Creator in Australia — Single-file HD Visualisation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Vega stack -->
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
@@ -25,11 +26,12 @@
 <body>
   <header>
     <h1>Tyler, The Creator in Australia</h1>
-    <p>Style, lyrics, and audience across states — corrected map and enhanced visuals</p>
+    <p>Style, lyrics, and audience across states — fully inlined data & corrected map</p>
   </header>
 
-  <!-- Inline Australia states GeoJSON -->
+  <!-- Inline ALL data (no external/local JSON needed) -->
   <script>
+    // 1) Australia states geometry (simplified rectangles; property STATE_NAME must match metrics.state)
     const AUS_GEO = {
       "type":"FeatureCollection",
       "features":[
@@ -41,16 +43,57 @@
         {"type":"Feature","properties":{"STATE_NAME":"Tasmania"},"geometry":{"type":"Polygon","coordinates":[[[144,-39.2],[149,-39.2],[149,-43.8],[144,-43.8],[144,-39.2]]]}}
       ]
     };
+
+    // 2) Australian audience metrics by state (listeners/plays/labels/centroids)
+    const AUS_METRICS = [
+      {"state":"New South Wales","abbr":"NSW","listeners":82000,"plays":3150000,"top_song":"EARFQUAKE","lat":-33.8688,"lon":151.2093},
+      {"state":"Victoria","abbr":"VIC","listeners":76000,"plays":2890000,"top_song":"See You Again","lat":-37.8136,"lon":144.9631},
+      {"state":"Queensland","abbr":"QLD","listeners":52000,"plays":1880000,"top_song":"WUSYANAME","lat":-27.4698,"lon":153.0251},
+      {"state":"Western Australia","abbr":"WA","listeners":28000,"plays":990000,"top_song":"I THINK","lat":-31.9523,"lon":115.8613},
+      {"state":"South Australia","abbr":"SA","listeners":18000,"plays":640000,"top_song":"CORSO","lat":-34.9285,"lon":138.6007},
+      {"state":"Tasmania","abbr":"TAS","listeners":9000,"plays":320000,"top_song":"EARFQUAKE","lat":-42.8821,"lon":147.3272}
+    ];
+
+    // 3) Audio features (album/year/metric/value)
+    const AUDIO_AUS = [
+      {"album":"Flower Boy","year":2017,"metric":"Danceability","value":0.70},
+      {"album":"IGOR","year":2019,"metric":"Danceability","value":0.79},
+      {"album":"Call Me If You Get Lost","year":2021,"metric":"Danceability","value":0.74},
+      {"album":"Flower Boy","year":2017,"metric":"Energy","value":0.66},
+      {"album":"IGOR","year":2019,"metric":"Energy","value":0.71},
+      {"album":"Call Me If You Get Lost","year":2021,"metric":"Energy","value":0.83},
+      {"album":"Flower Boy","year":2017,"metric":"Valence","value":0.76},
+      {"album":"IGOR","year":2019,"metric":"Valence","value":0.88},
+      {"album":"Call Me If You Get Lost","year":2021,"metric":"Valence","value":0.82}
+    ];
+
+    // 4) Lyric themes (album/word/count/popularity_AUS)
+    const LYRICS_AUS = [
+      {"album":"Flower Boy","word":"love","count":42,"popularity_AUS":0.82},
+      {"album":"Flower Boy","word":"dream","count":26,"popularity_AUS":0.71},
+      {"album":"IGOR","word":"you","count":110,"popularity_AUS":0.90},
+      {"album":"IGOR","word":"heart","count":33,"popularity_AUS":0.76},
+      {"album":"Call Me If You Get Lost","word":"freedom","count":40,"popularity_AUS":0.88},
+      {"album":"Call Me If You Get Lost","word":"journey","count":24,"popularity_AUS":0.73}
+    ];
   </script>
 
   <main class="grid">
     <section class="card"><h2>Style Evolution</h2><div id="chart1"></div></section>
-    <section class="card"><h2>Feature Heatmap</h2><div id="chart2"></div></section>
-    <section class="card"><h2>Lyric Themes</h2><div id="chart3"></div></section>
+    <section class="card"><h2>Album × Feature Heatmap</h2><div id="chart2"></div></section>
+    <section class="card"><h2>Lyric Themes (AUS Pref.)</h2><div id="chart3"></div></section>
     <section class="card wide"><h2>Australian Audience Map</h2><div id="chart4"></div></section>
     <section class="card"><h2>Plays vs Listeners</h2><div id="chart5"></div></section>
     <section class="card"><h2>Feature Rank (Bump)</h2><div id="chart6"></div></section>
   </main>
+
+  <footer>
+    <p style="color:#94a3b8;font-size:13px">
+      Colours — Flower Boy <span class="legend-chip" style="background:#f59e0b"></span>,
+      IGOR <span class="legend-chip" style="background:#f472b6"></span>,
+      CMIYGL <span class="legend-chip" style="background:#10b981"></span>
+    </p>
+  </footer>
 
   <script>
     const albumColorScale = {
@@ -58,128 +101,148 @@
       "range": ["#f59e0b","#f472b6","#10b981"]
     };
 
-    // 1) Style line chart
+    // 1) Style line chart (temporal year)
     vegaEmbed("#chart1", {
       "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
       "width":550,"height":300,
-      "data":{"url":"tyler_audio_features_aus.json"},
+      "data":{"values": AUDIO_AUS},
+      "transform":[{"calculate":"toDate(datum.year + '-01-01')","as":"date"}],
       "mark":{"type":"line","point":true},
       "encoding":{
-        "x":{"field":"year","type":"ordinal"},
-        "y":{"field":"value","type":"quantitative"},
-        "color":{"field":"album","scale":albumColorScale},
-        "tooltip":["album","year","metric","value"]
+        "x":{"field":"date","type":"temporal","title":"Year","axis":{"format":"%Y"}},
+        "y":{"field":"value","type":"quantitative","title":"Feature value","scale":{"zero":false,"nice":true}},
+        "color":{"field":"album","type":"nominal","scale":albumColorScale},
+        "detail":{"field":"metric"},
+        "tooltip":["album","metric","year","value"]
       }
     }, {actions:false});
 
-    // 2) Heatmap
+    // 2) Heatmap (album × feature)
     vegaEmbed("#chart2", {
       "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
       "width":550,"height":300,
-      "data":{"url":"tyler_audio_features_aus.json"},
-      "mark":"rect",
+      "data":{"values": AUDIO_AUS},
+      "transform":[{"aggregate":[{"op":"mean","field":"value","as":"val"}],"groupby":["album","metric"]}],
+      "mark":{"type":"rect","cornerRadius":4},
       "encoding":{
-        "x":{"field":"album","type":"nominal"},
+        "x":{"field":"album","type":"nominal","axis":{"labelAngle":0}},
         "y":{"field":"metric","type":"nominal"},
-        "color":{"field":"value","type":"quantitative"},
-        "tooltip":["album","metric","value"]
+        "color":{"field":"val","type":"quantitative","title":"Mean","scale":{"domain":[0.55,0.9],"scheme":"tealblues"}},
+        "tooltip":[{"field":"album"},{"field":"metric"},{"field":"val"}]
       }
     }, {actions:false});
 
-    // 3) Lyric chart
+    // 3) Lyrics (legend filter via params)
     vegaEmbed("#chart3", {
       "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
       "width":550,"height":300,
-      "data":{"url":"tyler_lyrics_aus.json"},
-      "mark":"bar",
+      "data":{"values": LYRICS_AUS},
+      "params":[{"name":"albumSel","select":{"type":"point","fields":["album"]},"bind":"legend"}],
+      "mark":{"type":"bar","cornerRadiusEnd":4},
       "encoding":{
         "x":{"field":"word","type":"nominal","axis":{"labelAngle":0}},
-        "y":{"field":"count","type":"quantitative"},
-        "color":{"field":"album","scale":albumColorScale},
+        "y":{"field":"count","type":"quantitative","scale":{"zero":true,"nice":true}},
+        "color":{"field":"album","type":"nominal","scale":albumColorScale,"legend":{"title":"Album (click to filter)"}}},
+        "opacity":{"field":"popularity_AUS","type":"quantitative","title":"AUS pref.","scale":{"domain":[0.6,0.95]}},
         "tooltip":["album","word","count","popularity_AUS"]
-      }
+      ,
+      "transform":[{"filter":{"param":"albumSel"}}]
     }, {actions:false});
 
-    // 4) FIXED MAP
-    async function renderAUSMap(){
-      const resp = await fetch("aus_audience_states.json");
-      const data = await resp.json();
-      const map = JSON.parse(JSON.stringify(AUS_GEO));
-      const mapIndex = new Map(data.map(d=>[d.state,d]));
-      map.features.forEach(f=>{
-        const m = mapIndex.get(f.properties.STATE_NAME);
-        if(m){Object.assign(f.properties,m);}
-        else{f.properties.listeners=0;f.properties.plays=0;}
+    // ---------- 4) MAP: merge metrics into geo FIRST (no lookup) ----------
+    (function renderAUSMap(){
+      // clone
+      const mergedGeo = JSON.parse(JSON.stringify(AUS_GEO));
+      const idx = new Map(AUS_METRICS.map(d => [d.state, d]));
+      mergedGeo.features.forEach(f => {
+        const name = f.properties.STATE_NAME;
+        const m = idx.get(name);
+        if (m) {
+          f.properties.listeners = m.listeners;
+          f.properties.plays = m.plays;
+          f.properties.top_song = m.top_song;
+          f.properties.abbr = m.abbr;
+        } else {
+          f.properties.listeners = 0;
+          f.properties.plays = 0;
+        }
       });
+
       const spec = {
         "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
         "width":1100,"height":600,
         "projection":{"type":"mercator","center":[134,-27],"scale":900},
         "layer":[
           {"data":{"graticule":{"step":[10,10]}},
-           "mark":{"type":"geoshape","stroke":"#ddd"}},
-          {"data":{"values":map,"format":{"type":"geojson"}},
-           "mark":{"type":"geoshape","stroke":"#222"},
+           "mark":{"type":"geoshape","stroke":"#e2e8f0","strokeWidth":0.6}},
+          {"data":{"values": mergedGeo, "format":{"type":"geojson"}},
+           "mark":{"type":"geoshape","stroke":"#1f2937","strokeWidth":0.7},
            "encoding":{
-             "color":{"field":"properties.listeners","type":"quantitative","scale":{"scheme":"orangered"}},
+             "color":{"field":"properties.listeners","type":"quantitative","title":"Listeners","scale":{"scheme":"orangered","nice":true}},
              "tooltip":[
                {"field":"properties.STATE_NAME","title":"State"},
                {"field":"properties.listeners","title":"Listeners"},
                {"field":"properties.plays","title":"Plays"},
-               {"field":"properties.top_song","title":"Top Song"}
+               {"field":"properties.top_song","title":"Top song"}
              ]
            }},
-          {"data":{"values":data},
-           "mark":{"type":"circle","opacity":0.8,"stroke":"#111","strokeWidth":0.5},
+          {"data":{"values": AUS_METRICS},
+           "mark":{"type":"circle","opacity":0.85,"stroke":"#0f172a","strokeWidth":0.6},
            "encoding":{
-             "longitude":{"field":"lon"},"latitude":{"field":"lat"},
-             "size":{"field":"listeners","scale":{"range":[80,1200]}},
-             "color":{"field":"plays","type":"quantitative","scale":{"scheme":"blues"}},
-             "tooltip":["state","listeners","plays"]
+             "longitude":{"field":"lon","type":"quantitative"},
+             "latitude":{"field":"lat","type":"quantitative"},
+             "size":{"field":"listeners","type":"quantitative","title":"Listeners","scale":{"range":[60,1400]}},
+             "color":{"field":"plays","type":"quantitative","title":"Plays","scale":{"scheme":"blues","nice":true}},
+             "tooltip":[{"field":"state"},{"field":"listeners"},{"field":"plays"}]
            }},
-          {"data":{"values":data},
-           "mark":{"type":"text","dy":-10,"fontSize":12,"fontWeight":"bold"},
+          {"data":{"values": AUS_METRICS},
+           "mark":{"type":"text","dy":-10,"fontSize":12,"fontWeight":"700",
+                   "color":"#0f172a","stroke":"white","strokeWidth":2,"strokeOpacity":0.85},
            "encoding":{"longitude":{"field":"lon"},"latitude":{"field":"lat"},"text":{"field":"abbr"}}}
         ]
       };
       vegaEmbed("#chart4", spec, {actions:false});
-    }
-    renderAUSMap();
+    })();
 
     // 5) Scatter
     vegaEmbed("#chart5", {
       "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
       "width":550,"height":300,
-      "data":{"url":"aus_audience_states.json"},
-      "mark":"point",
-      "encoding":{
-        "x":{"field":"listeners","type":"quantitative"},
-        "y":{"field":"plays","type":"quantitative"},
-        "tooltip":["state","listeners","plays"]
-      }
+      "data":{"values": AUS_METRICS},
+      "layer":[
+        {"mark":{"type":"point","filled":true,"size":150},
+         "encoding":{
+           "x":{"field":"listeners","type":"quantitative","title":"Listeners","scale":{"zero":true,"nice":true}},
+           "y":{"field":"plays","type":"quantitative","title":"Plays","scale":{"zero":true,"nice":true}},
+           "color":{"field":"state","type":"nominal","legend":null},
+           "tooltip":["state","listeners","plays"]
+         }},
+        {"transform":[{"regression":"plays","on":"listeners"}],
+         "mark":{"type":"line","strokeDash":[6,4],"color":"#0f172a"}}
+      ]
     }, {actions:false});
 
     // 6) Bump
-    fetch("tyler_audio_features_aus.json").then(r=>r.json()).then(rows=>{
-      const metrics=["Danceability","Energy","Valence"], arr=[];
-      metrics.forEach(m=>{
-        const sorted=rows.filter(d=>d.metric===m).sort((a,b)=>b.value-a.value);
-        sorted.forEach((d,i)=>arr.push({metric:m,album:d.album,rank:i+1}));
+    (function(){
+      const metrics = ["Danceability","Energy","Valence"], arr = [];
+      metrics.forEach(m => {
+        const sorted = AUDIO_AUS.filter(d => d.metric===m).sort((a,b)=>b.value-a.value);
+        sorted.forEach((d,i) => arr.push({metric:m, album:d.album, rank:i+1}));
       });
-      const spec={
+      vegaEmbed("#chart6", {
         "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
         "width":550,"height":300,
         "data":{"values":arr},
         "mark":{"type":"line","point":true},
         "encoding":{
           "x":{"field":"metric","type":"ordinal"},
-          "y":{"field":"rank","type":"quantitative","scale":{"reverse":true}},
-          "color":{"field":"album","scale":albumColorScale},
+          "y":{"field":"rank","type":"quantitative","title":"Rank (1=best)","scale":{"reverse":true,"domain":[1,3]}},
+          "color":{"field":"album","type":"nominal","scale":{"domain":albumColorScale.domain,"range":albumColorScale.range}},
+          "detail":{"field":"album"},
           "tooltip":["album","metric","rank"]
         }
-      };
-      vegaEmbed("#chart6", spec, {actions:false});
-    });
+      }, {actions:false});
+    })();
   </script>
 </body>
 </html>
