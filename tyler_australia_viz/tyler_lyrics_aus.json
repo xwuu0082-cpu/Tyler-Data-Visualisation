@@ -1,0 +1,38 @@
+[
+  {
+    "album": "Flower Boy",
+    "word": "love",
+    "count": 42,
+    "popularity_AUS": 0.82
+  },
+  {
+    "album": "Flower Boy",
+    "word": "dream",
+    "count": 26,
+    "popularity_AUS": 0.71
+  },
+  {
+    "album": "IGOR",
+    "word": "you",
+    "count": 110,
+    "popularity_AUS": 0.9
+  },
+  {
+    "album": "IGOR",
+    "word": "heart",
+    "count": 33,
+    "popularity_AUS": 0.76
+  },
+  {
+    "album": "Call Me If You Get Lost",
+    "word": "freedom",
+    "count": 40,
+    "popularity_AUS": 0.88
+  },
+  {
+    "album": "Call Me If You Get Lost",
+    "word": "journey",
+    "count": 24,
+    "popularity_AUS": 0.73
+  }
+]
