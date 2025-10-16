@@ -38,6 +38,21 @@
     <p>Style, lyrics, and audience across states — album-thematic colours, corrected scales, and enhanced map.</p>
   </header>
 
+  <!-- Inline Australia states GeoJSON (simplified rect-polygons for each state) -->
+  <script>
+    const AUS_GEO = {
+      "type":"FeatureCollection",
+      "features":[
+        {"type":"Feature","properties":{"STATE_NAME":"New South Wales"},"geometry":{"type":"Polygon","coordinates":[[[141,-28],[153.6,-28],[153.6,-37.5],[141,-37.5],[141,-28]]]}},
+        {"type":"Feature","properties":{"STATE_NAME":"Victoria"},"geometry":{"type":"Polygon","coordinates":[[[141,-37.5],[150,-37.5],[150,-39.2],[141,-39.2],[141,-37.5]]]}},
+        {"type":"Feature","properties":{"STATE_NAME":"Queensland"},"geometry":{"type":"Polygon","coordinates":[[[138,-10.5],[153.6,-10.5],[153.6,-28],[138,-28],[138,-10.5]]]}},
+        {"type":"Feature","properties":{"STATE_NAME":"Western Australia"},"geometry":{"type":"Polygon","coordinates":[[[112,-14],[129,-14],[129,-35],[112,-35],[112,-14]]]}},
+        {"type":"Feature","properties":{"STATE_NAME":"South Australia"},"geometry":{"type":"Polygon","coordinates":[[[129,-26],[141,-26],[141,-38],[129,-38],[129,-26]]]}},
+        {"type":"Feature","properties":{"STATE_NAME":"Tasmania"},"geometry":{"type":"Polygon","coordinates":[[[144,-39.2],[149,-39.2],[149,-43.8],[144,-43.8],[144,-39.2]]]}}
+      ]
+    };
+  </script>
+
   <main id="main" class="grid">
     <!-- 1) Time series with temporal axis + album colours -->
     <section class="card">
@@ -93,14 +108,7 @@
   </footer>
 
   <script>
-    // ====== SETTINGS ======
-    // 使用本地州界文件，避免 CORS：请确保 aus_states.geojson 与本页面同目录
-    const USE_LOCAL_AUS_STATES = true;
-    const AUS_STATES_URL = USE_LOCAL_AUS_STATES
-      ? "aus_states.geojson"
-      : "https://raw.githubusercontent.com/rowanhogan/australian-states/master/states.geojson";
-
-    // 统一专辑色
+    // Album colour scale (match cover themes)
     const albumColorScale = {
       "domain": ["Flower Boy","IGOR","Call Me If You Get Lost"],
       "range": ["#f59e0b","#f472b6","#10b981"]
@@ -177,11 +185,13 @@
       "encoding":{
         "x":{"field":"word","type":"nominal","title":"Keyword","sort":"-y","axis":{"labelAngle":0}},
         "y":{"field":"count","type":"quantitative","title":"Frequency","scale":{"zero": true, "nice": true}},
-        "color":{"field":"album","type":"nominal","scale": albumColorScale, "legend":{"title":"Album (click to filter)"}}},
+        "color":{"field":"album","type":"nominal","scale": albumColorScale,
+                 "legend":{"title":"Album (click to filter)"}},
         "opacity":{"field":"popularity_AUS","type":"quantitative","title":"AUS preference",
                    "scale":{"domain":[0.6,0.95]}},
-        "tooltip":[{"field":"album"},{"field":"word"},{"field":"count"},{"field":"popularity_AUS","title":"AUS preference"}]
-      ,
+        "tooltip":[{"field":"album"},{"field":"word"},{"field":"count"},
+                   {"field":"popularity_AUS","title":"AUS preference"}]
+      },
       "transform":[{"filter":{"param":"albumSel"}}]
     };
     vegaEmbed("#chart3", spec3, {actions:false});
@@ -192,9 +202,10 @@
       "width": 1150, "height": 640,
       "projection":{"type":"mercator","center":[134,-27],"scale": 900},
       "layer":[
-        {"data":{"graticule":{"step":[10,10]}},"mark":{"type":"geoshape","stroke":"#e2e8f0","strokeWidth":0.6}},
+        {"data":{"graticule":{"step":[10,10]}},
+         "mark":{"type":"geoshape","stroke":"#e2e8f0","strokeWidth":0.6}},
         {
-          "data":{"url": AUS_STATES_URL, "format":{"type":"geojson"}},
+          "data":{"values": AUS_GEO, "format":{"type":"geojson"}},
           "transform":[
             {"lookup":"properties.STATE_NAME",
              "from":{"data":{"url":"aus_audience_states.json"},
@@ -269,7 +280,7 @@
           "x":{"field":"metric","type":"ordinal","title":"Feature"},
           "y":{"field":"rank","type":"quantitative","title":"Rank (1 = best)",
                "scale":{"reverse": true, "domain":[1,3]}},
-          "color":{"field":"album","type":"nominal","scale": albumColorScale},
+          "color":{"field":"album","type":"nominal","scale": {"domain": albumColorScale.domain, "range": albumColorScale.range}},
           "detail":{"field":"album"},
           "tooltip":[{"field":"album"},{"field":"metric"},{"field":"rank"}]
         }
