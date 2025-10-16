@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Tyler, The Creator in Australia — Advanced Visualisation</title>
+  <title>Tyler, The Creator in Australia — Advanced Visualisation (Fixed)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Vega stack -->
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
@@ -27,11 +27,11 @@
 <body>
   <header>
     <h1>Tyler, The Creator in Australia</h1>
-    <p>Style, lyrics, and audience across states — with album-thematic colours.</p>
+    <p>Style, lyrics, and audience across states — album-thematic colours & corrected scales.</p>
   </header>
 
   <main class="grid">
-    <!-- 1) Time series with proper temporal axis + album colours -->
+    <!-- 1) Time series with temporal axis + album colours -->
     <section class="card">
       <div class="controls">
         <h2 style="margin-right:auto">Style Evolution (AUS)</h2>
@@ -45,31 +45,31 @@
       <div id="chart1"></div>
     </section>
 
-    <!-- 2) Heatmap for metric-by-album overview -->
+    <!-- 2) Heatmap overview -->
     <section class="card">
       <h2>Album × Feature Heatmap</h2>
       <div id="chart2"></div>
     </section>
 
-    <!-- 3) Lyrics themes with album palette + interactive filter -->
+    <!-- 3) Lyrics themes -->
     <section class="card">
       <h2>Lyric Themes (AUS Preference)</h2>
       <div id="chart3"></div>
     </section>
 
-    <!-- 4) Advanced Australia map: choropleth + symbols + labels + graticule -->
+    <!-- 4) Australia map -->
     <section class="card wide">
       <h2>Australian Audience by State (Choropleth + Symbols)</h2>
       <div id="chart4"></div>
     </section>
 
-    <!-- 5) Plays vs Listeners with regression trend -->
+    <!-- 5) Plays vs Listeners -->
     <section class="card">
       <h2>Plays vs Listeners (by State)</h2>
       <div id="chart5"></div>
     </section>
 
-    <!-- 6) Bump chart: ranking albums by each feature -->
+    <!-- 6) Bump chart -->
     <section class="card">
       <h2>Feature Ranking by Album (Bump)</h2>
       <div id="chart6"></div>
@@ -85,13 +85,20 @@
   </footer>
 
   <script>
-    // Album colour scale (match cover themes)
+    // ====== SETTINGS ======
+    // 如果你下载了澳洲州界文件为 aus_states.geojson，设为 true
+    const USE_LOCAL_AUS_STATES = false;
+    const AUS_STATES_URL = USE_LOCAL_AUS_STATES
+      ? "aus_states.geojson"
+      : "https://raw.githubusercontent.com/rowanhogan/australian-states/master/states.geojson";
+
+    // album colours
     const albumColorScale = {
       "domain": ["Flower Boy","IGOR","Call Me If You Get Lost"],
       "range": ["#f59e0b","#f472b6","#10b981"]
     };
 
-    // 1) Style time series: proper temporal axis + album-coloured points + vertical guides
+    // 1) Style time series — FIX: temporal axis + sane scales
     function styleSpec(metric="Danceability"){
       return {
         "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
@@ -104,8 +111,9 @@
           {
             "mark":{"type":"line","interpolate":"monotone","strokeWidth":2},
             "encoding":{
-              "x":{"field":"date","type":"temporal","title":"Year"},
-              "y":{"field":"value","type":"quantitative","title": metric, "scale":{"domain":[0.5,0.95]}},
+              "x":{"field":"date","type":"temporal","title":"Year","axis":{"format":"%Y"}},
+              "y":{"field":"value","type":"quantitative","title": metric,
+                   "scale":{"nice": true, "zero": false}},
               "color":{"value":"#111827"}
             }
           },
@@ -133,7 +141,7 @@
     sel.addEventListener('change', renderStyle);
     renderStyle();
 
-    // 2) Heatmap overview
+    // 2) Heatmap — FIX: explicit colour domain & scheme
     const spec2 = {
       "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
       "data":{"url":"tyler_audio_features_aus.json"},
@@ -142,13 +150,14 @@
       "encoding":{
         "x":{"field":"album","type":"nominal","title":"Album","axis":{"labelAngle":0}},
         "y":{"field":"metric","type":"nominal","title":"Feature"},
-        "color":{"field":"val","type":"quantitative","title":"Mean", "scale":{"scheme":"tealblues"}},
+        "color":{"field":"val","type":"quantitative","title":"Mean",
+                 "scale":{"domain":[0.55,0.9], "scheme":"tealblues"}},
         "tooltip":[{"field":"album"},{"field":"metric"},{"field":"val"}]
       }
     };
     vegaEmbed("#chart2", spec2, {actions:false});
 
-    // 3) Lyrics: interactive filter by album (legend), AUS popularity as opacity
+    // 3) Lyrics — FIX: y starts at 0, legend-filter, opacity domain
     const spec3 = {
       "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
       "data":{"url":"tyler_lyrics_aus.json"},
@@ -156,33 +165,35 @@
       "mark":{"type":"bar","cornerRadiusEnd":4},
       "encoding":{
         "x":{"field":"word","type":"nominal","title":"Keyword","sort":"-y","axis":{"labelAngle":0}},
-        "y":{"field":"count","type":"quantitative","title":"Frequency"},
+        "y":{"field":"count","type":"quantitative","title":"Frequency","scale":{"zero": true, "nice": true}},
         "color":{"field":"album","type":"nominal","scale": albumColorScale, "legend":{"title":"Album (click to filter)"}}},
-        "opacity":{"field":"popularity_AUS","type":"quantitative","title":"AUS preference","scale":{"domain":[0.6,0.95]}},
+        "opacity":{"field":"popularity_AUS","type":"quantitative","title":"AUS preference",
+                   "scale":{"domain":[0.6,0.95]}},
         "tooltip":[{"field":"album"},{"field":"word"},{"field":"count"},{"field":"popularity_AUS","title":"AUS preference"}]
       ,
       "transform":[{"filter":{"param":"albumSel"}}]
     };
     vegaEmbed("#chart3", spec3, {actions:false});
 
-    // 4) Australia map: choropleth (listeners) + symbols (plays) + labels + graticule
-    const ausStatesGeo = "https://raw.githubusercontent.com/rowanhogan/australian-states/master/states.geojson";
+    // 4) Australia map — FIX: local/remote geojson, tuned symbol sizes & colour scales
     const spec4 = {
       "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
       "width": 1100,
       "height": 600,
       "projection":{"type":"mercator","center":[134,-27],"scale": 900},
       "layer":[
-        {"data":{"graticule":{"step":[10,10]}},"mark":{"type":"geoshape","stroke":"#e5e7eb","strokeWidth":0.5}},
+        {"data":{"graticule":{"step":[10,10]}},"mark":{"type":"geoshape","stroke":"#e5e7eb","strokeWidth":0.6}},
         {
-          "data":{"url": ausStatesGeo, "format":{"type":"geojson"}},
+          "data":{"url": AUS_STATES_URL, "format":{"type":"geojson"}},
           "transform":[
             {"lookup":"properties.STATE_NAME",
-             "from":{"data":{"url":"aus_audience_states.json"},"key":"state","fields":["listeners","plays","abbr","top_song"]}}
+             "from":{"data":{"url":"aus_audience_states.json"},
+                     "key":"state","fields":["listeners","plays","abbr","top_song"]}}
           ],
-          "mark":{"type":"geoshape","stroke":"#111827","strokeWidth":0.6},
+          "mark":{"type":"geoshape","stroke":"#374151","strokeWidth":0.7},
           "encoding":{
-            "color":{"field":"listeners","type":"quantitative","title":"Listeners","scale":{"scheme":"orangered"}},
+            "color":{"field":"listeners","type":"quantitative","title":"Listeners",
+                     "scale":{"scheme":"orangered", "nice": true}},
             "tooltip":[
               {"field":"properties.STATE_NAME","title":"State"},
               {"field":"listeners"},{"field":"plays"},{"field":"top_song","title":"Top song"}
@@ -191,32 +202,36 @@
         },
         {
           "data":{"url":"aus_audience_states.json"},
-          "mark":{"type":"text","fontSize":12,"fontWeight":"600","dy":-10,"color":"#111827","stroke":"white","strokeWidth":2,"strokeOpacity":0.8},
-          "encoding":{"longitude":{"field":"lon"}, "latitude":{"field":"lat"}, "text":{"field":"abbr"}}
+          "mark":{"type":"circle","opacity":0.85,"stroke":"#111827","strokeWidth":0.6},
+          "encoding":{
+            "longitude":{"field":"lon","type":"quantitative"},
+            "latitude":{"field":"lat","type":"quantitative"},
+            "size":{"field":"listeners","type":"quantitative","title":"Listeners",
+                    "scale":{"range":[50, 1200]}},
+            "color":{"field":"plays","type":"quantitative","title":"Plays",
+                     "scale":{"scheme":"blues","nice": true}},
+            "tooltip":[{"field":"state"},{"field":"listeners"},{"field":"plays"}]
+          }
         },
         {
           "data":{"url":"aus_audience_states.json"},
-          "mark":{"type":"circle","opacity":0.85,"stroke":"#111827","strokeWidth":0.6},
-          "encoding":{
-            "longitude":{"field":"lon"}, "latitude":{"field":"lat"},
-            "size":{"field":"listeners","type":"quantitative","title":"Listeners"},
-            "color":{"field":"plays","type":"quantitative","title":"Plays","scale":{"scheme":"blues"}},
-            "tooltip":[{"field":"state"},{"field":"listeners"},{"field":"plays"}]
-          }
+          "mark":{"type":"text","fontSize":12,"fontWeight":"700","dy":-10,
+                  "color":"#111827","stroke":"white","strokeWidth":2,"strokeOpacity":0.85},
+          "encoding":{"longitude":{"field":"lon"}, "latitude":{"field":"lat"}, "text":{"field":"abbr"}}
         }
       ]
     };
     vegaEmbed("#chart4", spec4, {actions:false});
 
-    // 5) Scatter + regression
+    // 5) Scatter + regression — FIX: axes start at 0, nice ticks
     const spec5 = {
       "$schema":"https://vega.github.io/schema/vega-lite/v5.json",
       "data":{"url":"aus_audience_states.json"},
       "layer":[
         {"mark":{"type":"point","filled":true,"size":140},
          "encoding":{
-           "x":{"field":"listeners","type":"quantitative","title":"Listeners"},
-           "y":{"field":"plays","type":"quantitative","title":"Plays"},
+           "x":{"field":"listeners","type":"quantitative","title":"Listeners","scale":{"zero": true, "nice": true}},
+           "y":{"field":"plays","type":"quantitative","title":"Plays","scale":{"zero": true, "nice": true}},
            "color":{"field":"state","type":"nominal","legend":null},
            "tooltip":[{"field":"state"},{"field":"listeners"},{"field":"plays"}]
          }},
@@ -226,7 +241,7 @@
     };
     vegaEmbed("#chart5", spec5, {actions:false});
 
-    // 6) Bump chart: rank albums per feature (1=best)
+    // 6) Bump chart — FIX: explicit domain and nicer labels
     fetch('tyler_audio_features_aus.json').then(r => r.json()).then(rows => {
       const metrics = ["Danceability","Energy","Valence"];
       const bump = [];
@@ -240,7 +255,8 @@
         "mark":{"type":"line","point":true},
         "encoding":{
           "x":{"field":"metric","type":"ordinal","title":"Feature"},
-          "y":{"field":"rank","type":"quantitative","title":"Rank (1 = best)","scale":{"reverse": true, "nice": false, "domain":[1,3]}},
+          "y":{"field":"rank","type":"quantitative","title":"Rank (1 = best)",
+               "scale":{"reverse": true, "domain":[1,3]}},
           "color":{"field":"album","type":"nominal","scale": albumColorScale},
           "detail":{"field":"album"},
           "tooltip":[{"field":"album"},{"field":"metric"},{"field":"rank"}]
@@ -251,3 +267,4 @@
   </script>
 </body>
 </html>
+
