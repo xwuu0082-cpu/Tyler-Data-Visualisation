@@ -1,0 +1,69 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "STATE_NAME": "New South Wales" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[141, -28], [153.6, -28], [153.6, -37.5], [141, -37.5], [141, -28]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "STATE_NAME": "Victoria" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[141, -37.5], [150, -37.5], [150, -39.2], [141, -39.2], [141, -37.5]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "STATE_NAME": "Queensland" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[138, -10.5], [153.6, -10.5], [153.6, -28], [138, -28], [138, -10.5]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "STATE_NAME": "South Australia" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[129, -26], [141, -26], [141, -38], [129, -38], [129, -26]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "STATE_NAME": "Western Australia" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[112, -14], [129, -14], [129, -35], [112, -35], [112, -14]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "STATE_NAME": "Tasmania" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[144, -39.2], [149, -39.2], [149, -43.8], [144, -43.8], [144, -39.2]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "STATE_NAME": "Northern Territory" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[129, -10.5], [138, -10.5], [138, -26], [129, -26], [129, -10.5]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "STATE_NAME": "Australian Capital Territory" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[148.8, -35], [149.3, -35], [149.3, -35.7], [148.8, -35.7], [148.8, -35]]]
+      }
+    }
+  ]
+}
